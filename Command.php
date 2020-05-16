@@ -75,17 +75,9 @@ class Command{
 						$this->checkArgument($temp, 'content-path');
 					    break;
 					        	
-					case '--report-path':
-						$this->checkArgument($temp, 'report-path');
-					    break;
-					    
 			        case '--purge':
 			            $this->setPurge();
 			            break;
-				        
-				    case '--report-name':
-				        $this->checkArgument($temp, 'report-name');
-				        break;
 
 //=========================================================					
 					default:
@@ -113,14 +105,6 @@ class Command{
 					    $this->setContentPath(trim($temp[1]));
 					    break;
 					    
-					case 'report-path':
-				        $this->setReportPath(trim($temp[1]));
-				        break;
-
-			        case 'report-name':
-			            $this->setReportName(trim($temp[1]));
-			            break;
-
 	                case 'purge':
 	                    $this->setPurge(trim($temp[1]));
 	                    break;
@@ -221,41 +205,3 @@ class Command{
    * @return String
    */
    public function getContentPath(){ return $this->_CONTENT_PATH;}
-
-// ------- Report Path ---------------
-   /**
-    * Sets the report Path
-    * @param path-> String
-    *
-    */
-    private function setReportPath($path){
-        if (substr($path, -1)<>'/'){
-            $path .='/';
-        } 
-        $this->_REPORT_PATH = $path;
-    }
-     
-    /**
-    * Returns the QA report Path value
-    *
-    * @return String
-    */
-    public function getReportPath(){ return $this->_REPORT_PATH;}
-
-// ------- Report Name ---------------
-    /**
-     * Sets the report Name
-     * @param path-> String
-     *
-     */
-     private function setReportName($name){
-         $this->_REPORT_NAME = $name;
-     }
-      
-     /**
-     * Returns the report Name value
-     *
-     * @return String
-     */
-     public function getReportName(){ return $this->_REPORT_NAME; }
-}
