@@ -205,3 +205,18 @@ class Command{
    * @return String
    */
    public function getContentPath(){ return $this->_CONTENT_PATH;}
+
+// ------- Report Path ---------------
+   /**
+    * Sets the report Path
+    * @param path-> String
+    *
+    */
+    private function setReportPath($path){
+        if (substr($path, -1)<>'/'){
+            $path .='/';
+        } 
+        $this->_REPORT_PATH = $path;
+    }
+
+}

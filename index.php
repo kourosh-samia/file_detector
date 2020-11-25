@@ -24,7 +24,7 @@ $doublicates = $temp['douplicates'];
 $singles = $temp['singles'];
 
 print_r($singles);
-print_r($doublicates);
+//print_r($doublicates);
 die;    
     echo "Duplicates:".count($doublicates).PHP_EOL;
     echo "Total:".$files[1].PHP_EOL;
