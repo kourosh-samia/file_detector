@@ -13,11 +13,14 @@ $command = new Command($argv);
 // Load the Help manual on the console
 if ($command->getHelp()) { die(file_get_contents('help.txt').PHP_EOL);}
 
-
 $info = [
         'content-path'         => $command->getContentPath(),
+        'report-path'          => $command->getReportPath(),
         'dryrun'               => $command->getDryRun(),
         'verbose'              => $command->getVerbose(),
-        'progress'             => $command->getProgress()
-        ];
+        'progress'             => $command->getProgress(),
+        'version_flag'         => $command->getVersionFlag(),
+        'version'              => $command->getVersion()
+];
     
+print_r($info);

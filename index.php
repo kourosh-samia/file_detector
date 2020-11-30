@@ -9,6 +9,7 @@
  tag the picturs. > in web portel
   
 */
+
 require_once 'bootstrap.php';
 $_CONTENT_PATH = $info['content-path'];;
 

@@ -6,7 +6,7 @@ class Functions {
 	static private $row_count = 0;
 	
 	public function __construct(){
-		$this->setConfig(Config::getConfig());
+	    $this->setConfig(Error_messages::getEMessages());
 	}
 	
 	private function setConfig($config){
