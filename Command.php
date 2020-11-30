@@ -203,7 +203,24 @@ class Command{
 	* @return String
 	*/
 	public function getProgress(){ return $this->_PROGRESS;}
-	  
+
+	
+//------- Meta Data ---------------
+	/**
+	 * Returns the Meta Data file name
+	 *
+	 * @return String
+	 */
+	public function getMetaData(){ return $this->_META_DATA;}
+	
+//------- Duplicates ---------------
+  /**
+	* Returns the Duplicates file name
+	*
+	* @return String
+	*/
+	public function getDuplicates(){ return $this->_DUPLICATE;}
+	
 //------- Version ---------------
   /**
 	* Sets the Version Flag
@@ -233,8 +250,8 @@ class Command{
    *
    */
     private function setContentPath($content_path){
-        if (substr($content_path, -1)<>'/'){
-            $content_path .='/';
+        if (substr($content_path, -1)=='/'){
+            $content_path = substr($content_path, 0, -1);
         }
         
         $this->_CONTENT_PATH = $content_path;
@@ -245,7 +262,13 @@ class Command{
    *
    * @return String
    */
-    public function getContentPath(){return $this->_CONTENT_PATH; }
+    public function getContentPath(){
+        if (substr($this->_CONTENT_PATH, -1)=='/'){
+            return substr($this->_CONTENT_PATH, 0, -1);
+        }
+        
+        return $this->_CONTENT_PATH; 
+    }
    
 // ------- Report Path ---------------
    /**

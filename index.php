@@ -11,14 +11,26 @@
 */
 
 require_once 'bootstrap.php';
-$_CONTENT_PATH = $info['content-path'];;
+$_CONTENT_PATH = $info['content-path'];
+$_REPORT_PATH  = $info['report-path'];
+$_META_DATA    = $info['meta-data'];
+$_DUPLICATES   = $info['duplicates'];
 
 // Shows the header on the command line
 echo Functions::parseHeader();
-    
+
+// reads all of the files and finds the paths and names and puts them in an array 
 $files = Functions::dirToArray($_CONTENT_PATH);
 
+// Create the meta-data file and write the files and folders in json format in it`
+$contents = Functions::dataToFile($_REPORT_PATH, $_META_DATA, $files);
+var_dump(json_decode($contents));
+
+// Read the meta-data file, calculate hash, extensions, and write the dat into a temp file. 
 $raw_hashed  = Functions::arrayToHash($files[0], $files[1]);
+
+die;
+
  
 $temp = Functions::findDoublicateFiles($raw_hashed);
 $doublicates = $temp['douplicates'];

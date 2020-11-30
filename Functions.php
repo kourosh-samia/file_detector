@@ -144,18 +144,7 @@ class Functions {
 	    fclose($fp);   
 	}
 
-	public static function openFile($path, $file_name, $mode = 'r+'){
-	    $contents = '';
-	    if (file_exists($path.$file_name)) {
-	        $handle = fopen($path.$file_name, $mode);
-	        $contents = fread($handle, filesize($path.$file_name));
-	        fclose($handle);
-	    } else {
-	        $handle = fopen($path.$file_name, 'w+');
-	        fclose($handle);
-	    }
-	    return $contents;
-	}
+
 	
 	/**
 	 * Returns the list of folders
@@ -213,6 +202,47 @@ class Functions {
 	            'singles'=>$singles
 	           ];
 	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+//==============================================================================	
+  /**
+	* This function will try to create a file. If the file exist, 
+	* it will return the content along with the file size. Otherwise, 
+	* It will create an empty file and return an empty string.
+	* 
+	* @param string $path -> Path to the file
+	* @param string $file_name
+	* @param string $data -> array of data
+	* @return string
+	*/
+	public static function dataToFile($path, $file_name, $data){
+	    $mode = 'w+';
+	    $contents = [];
+        try {
+            $handle = fopen($path.$file_name, $mode);
+            fwrite($handle, json_encode($data));
+            fclose($handle);
+            $handle = fopen($path.$file_name, 'r+');
+            
+            if(filesize($path.$file_name) > 0){
+                $contents = fread($handle, filesize($path.$file_name));
+            }
+            fclose($handle);
+            
+        } catch (Exception $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
+        }
+        
+	    return $contents;
+	}
+	
 	
 	/**
 	 * finds all directories and folders and put them in an array
@@ -226,14 +256,51 @@ class Functions {
 	            if (is_dir($dir . DIRECTORY_SEPARATOR . $value)){
 	                self::dirToArray($dir . DIRECTORY_SEPARATOR . $value);
 	            }else{
-	                self::$result[$dir][] = $value;
+	                self::$result[$dir][]  = $value;
 	                self::$row_count = self::$row_count + 1;
+	                
+	                
+	                
+// 	                self::$result[$dir][$value]['filename']  = $value;
+// 	                self::$result[$dir][$value]['hash']      = self::calHash($dir, $value);
+	                
+// 	                $fileInfo = self::getFileInfo($dir, $value);
+// 	                self::$result[$dir][$value]['extension'] = $fileInfo['extension'];
+// 	                print_r(self::$result);
+	                
+	                
+	                
 	            }
 	        }
 	    }
 	    $output = array(self::$result, self::$row_count);
 	    return $output;
 	}
+
+	
+	/**
+	 * Calculate the hash of teh given file
+	 * @param String $dir -> Folder
+	 * @param String $filename -> filename
+	 * @return string
+	 */
+	public static function calHash($dir, $filename) {
+	    $hash = md5_file($dir. DIRECTORY_SEPARATOR . $filename);
+	    return $hash;
+	}
+	
+	/**
+	 * Finds the path info to a folder+ filename
+	 * @param String $dir -> Folder
+	 * @param String $filename -> filename
+	 * @return string
+	 */
+	public static function getFileInfo($dir, $filename) {
+	    return pathinfo($dir.$filename);
+	}
+	
+//==============================================================================
+	
 	
 	/**
 	 * Calculates the hash of the array of folder and filenames 
@@ -253,17 +320,6 @@ class Functions {
 	    return $result;
 	}
 	
-	/**
-	 * Calculate the hash of teh given file
-	 * @param String $dir -> Folder
-	 * @param String $filename -> filename
-	 * @return string
-	 */
-	public static function calHash($dir, $filename) {
-        $hash = md5_file($dir. DIRECTORY_SEPARATOR . $filename);   
-	    return $hash;
-	}
-
 	/**
 	 * Show a bar graph for commandline CLIs
 	 *

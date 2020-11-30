@@ -16,6 +16,8 @@ if ($command->getHelp()) { die(file_get_contents('help.txt').PHP_EOL);}
 $info = [
         'content-path'         => $command->getContentPath(),
         'report-path'          => $command->getReportPath(),
+        'meta-data'            => $command->getMetaData(),
+        'duplicates'           => $command->getDuplicates(),
         'dryrun'               => $command->getDryRun(),
         'verbose'              => $command->getVerbose(),
         'progress'             => $command->getProgress(),
