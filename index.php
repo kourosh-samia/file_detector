@@ -23,16 +23,17 @@ echo Functions::parseHeader();
 $files = Functions::dirToArray($_CONTENT_PATH);
 
 // Create the meta-data file and write the files and folders in json format in it`
-$contents = Functions::dataToFile($_REPORT_PATH, $_META_DATA, $files);
-var_dump(json_decode($contents));
+//$data = Functions::dataToFile($_REPORT_PATH, $_META_DATA, $files);
+$data = $files;
 
 // Read the meta-data file, calculate hash, extensions, and write the dat into a temp file. 
-$raw_hashed  = Functions::arrayToHash($files[0], $files[1]);
-
-die;
+$raw_hashed  = Functions::arrayToHash($data[0], $data[1]);
 
  
 $temp = Functions::findDoublicateFiles($raw_hashed);
+var_dump($temp['douplicates']);
+
+die;
 $doublicates = $temp['douplicates'];
 $singles = $temp['singles'];
 

@@ -170,48 +170,6 @@ class Functions {
         return $folders_list;	        
 	}
 	
-	
-	
-	
-	
-	
-	
-    /**
-     * Find the duplicates and create a uniqu array
-     * @param string array $hashed_records
-     * @return array -> douplicates, singles
-     */
-	public static function findDoublicateFiles(array $hashed_records) {
-	    $douplicates = [];
-	    $singles = [];
-	    $temp = [];
-	    foreach ($hashed_records as $file => $hash){
-	        $temp[$hash][] = $file;
-	        unset($hashed_records[$file]);
-	    }
-	    
-	    foreach ($temp as $hash => $file){
-	        if (count($file)>1){
-	           $douplicates[$hash] = $file;
-	        }else{
-	            $singles[$hash] = $file;
-	        }
-	    }
-	     
-	    return ['douplicates'=>$douplicates,
-	            'singles'=>$singles
-	           ];
-	}
-
-	
-	
-	
-	
-	
-	
-	
-	
-//==============================================================================	
   /**
 	* This function will try to create a file. If the file exist, 
 	* it will return the content along with the file size. Otherwise, 
@@ -240,9 +198,37 @@ class Functions {
             echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
         
-	    return $contents;
+        return json_decode($contents, true);
 	}
 	
+//==============================================================================
+
+	/**
+	 * Find the duplicates and create a uniqu array
+	 * @param string array $hashed_records
+	 * @return array -> douplicates, singles
+	 */
+	public static function findDoublicateFiles(array $hashed_records) {
+	    $douplicates = [];
+	    $singles = [];
+	    $temp = [];
+	    foreach ($hashed_records as $file => $hash){
+	        $temp[$hash][] = $file;
+	        unset($hashed_records[$file]);
+	    }
+	    
+	    foreach ($temp as $hash => $file){
+	        if (count($file)>1){
+	            $douplicates[$hash] = $file;
+	        }else{
+	            $singles[$hash] = $file;
+	        }
+	    }
+	    
+	    return ['douplicates'=>$douplicates,
+  	            'singles'=>$singles
+	           ];
+	}
 	
 	/**
 	 * finds all directories and folders and put them in an array
@@ -298,9 +284,6 @@ class Functions {
 	public static function getFileInfo($dir, $filename) {
 	    return pathinfo($dir.$filename);
 	}
-	
-//==============================================================================
-	
 	
 	/**
 	 * Calculates the hash of the array of folder and filenames 
@@ -371,5 +354,6 @@ class Functions {
             echo "\n";
         }
 	}
+//==============================================================================
 	
 }
