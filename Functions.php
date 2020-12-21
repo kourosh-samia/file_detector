@@ -32,23 +32,6 @@ class Functions {
 		return ($temp['system-messages'][$topic][$type].PHP_EOL); 
 	}
 	
-//----------------------------------- GENERAL --------------------------------------------------
-	/**
-	 * Creates the empty report files in path folder 
-	 * @param Array $logs -> the list of log files that final reports should be written into
-	 * @param String $path -> the path where the qa report will be written in to
-	 */
-	public static function cleanLogs(array $logs, $path) {
-	    foreach ($logs as $key => $log) {
-            $file = $path.'/'.$log.'.log';
-	        $handle = fopen($file, "w+");
- 	        if ($handle != FALSE) {
- 	            ftruncate($handle, 0);
- 	            fclose($handle);
-	        }
-	    }
-	}
-	
 	/**
 	 * @author Kourosh Samia
 	 * @return string
@@ -60,19 +43,7 @@ class Functions {
 	    $output .= "-----------------------------------------------".PHP_EOL;
 	    return $output;
 	} 
-	
-	public static function parseStats($info, $test){
-	    $output = PHP_EOL.PHP_EOL."-----------------------------------------------".PHP_EOL;
-	    $output .= " Total Folders: "    .$info[$test]['t_folders'].PHP_EOL;
-	    $output .= " Total {$test} Records: ".$info[$test]['t_contents']." in LMS Database".PHP_EOL;
-	    $output .= " Total Size of Folders: "    .$info[$test]['t_folder_size'].' Bytes - '.Lib_FileHandler::FileSizeConvert($info[$test]['t_folder_size']).PHP_EOL;
-	    $output .= " Total Folders Deleted: ".$info[$test]['t_folder_deleted']." From HDD ".PHP_EOL;
-	    $output .= " Total Size of Deleted Folders: ".$info[$test]['t_folder_deleted_size'].' Bytes'.' - '.Lib_FileHandler::FileSizeConvert($info[$test]['t_folder_deleted_size']).PHP_EOL;
-	    $output .= "-----------------------------------------------".PHP_EOL;
-	
-	    return $output;
-	}
-	
+
 	/**
 	 * calculate the maximum length of an array of string and returns the longest one back
 	 * @param array $data -> array of strings
@@ -109,67 +80,7 @@ class Functions {
 			return $temp;
 		}
 	}
-	
-	public static function createCSVFile($data, $path, $file_name){	    
-	    $fp = fopen($path.$file_name, 'w');
-	    $header ='type, id, version, faculty_id, course_wrapper_id, file size, exist in asset folder, exist in content table, exist in survey table, content_container_id, enrollment, deleted, status, title'.PHP_EOL;
-	    fwrite($fp, $header);
 
-	    foreach ( $data as $type=>$info ) {
-	        foreach ( $info as $content=>$infoo ) {
-	            foreach ( $infoo as $version=>$infooo ) {
-	                $val = $infooo['type'].','.
-	   	                   $infooo['id'].','.
-	   	                   $infooo['version'].','.
-	   	                   $infooo['faculty'].','.
-	   	                   $infooo['course_wrapper_id'].','.
-	   	                   $infooo['size'].','.
-	   	                   $infooo['found_in_asset_folder'].','.
-	                       $infooo['found_in_content_table'].','.
-	                       $infooo['found_in_survey_table'].','.
-	                       $infooo['content_container_id'].','.
-	                       $infooo['enrollment'].','.
-	                       $infooo['deleted'].','.
-	                       $infooo['status'].','.
-	                       $infooo['title'].'|'.PHP_EOL;
-	                 
-	                $result = fwrite($fp, $val);
-	                if ($result === false) {
-	                    die ("Error in write file in {$path}{$file_name}");
-	                }	                
-	           }
-	       }
-	    }
-	    echo ("File has been created at {$path}{$file_name}".PHP_EOL);
-	    fclose($fp);   
-	}
-
-
-	
-	/**
-	 * Returns the list of folders
-	 * @param String $path -> Path to the folder
-	 * @return multitype:Array -> List of folders
-	 */
-	public static function getFoldersList($path){
-	    
-	    $folders_list = array();
-	    if (!is_dir($path)) {
-	        die("Requested Path {$path} doesn't exist or can't be opned. Please check it! ".PHP_EOL);
-        }else{
-            // if the path doesn't have '/' then add to it
-            if (substr($path, strlen($path) - 1, 1) != '/') {
-                $path .= '/';
-            }            
-            $folders = glob($path.'*', GLOB_MARK);
-            foreach ($folders as $folder) {
-                array_push($folders_list, $folder);
-            }            
-        }
-        
-        return $folders_list;	        
-	}
-	
   /**
 	* This function will try to create a file. If the file exist, 
 	* it will return the content along with the file size. Otherwise, 
@@ -213,8 +124,10 @@ class Functions {
 	    $singles = [];
 	    $temp = [];
 	    foreach ($hashed_records as $file => $hash){
-	        $temp[$hash][] = $file;
+	        $fileInfo = self::getFileInfo($file);
+            $temp[$hash][] = $fileInfo;
 	        unset($hashed_records[$file]);
+//print_r($temp);die;
 	    }
 	    
 	    foreach ($temp as $hash => $file){
@@ -229,6 +142,26 @@ class Functions {
   	            'singles'=>$singles
 	           ];
 	}
+
+	public static function findFullData($file){
+	    $file_info = [];
+	    try {
+	        $exif = exif_read_data($file,0,true);
+            foreach ($exif as $key => $section) {
+                foreach ($section as $name => $val) {
+                    $file_info[$name]=$val;
+                }
+            }
+	    } catch (Exception $e) {
+	        echo $file;die;
+	    }
+if (empty($file_info) ) {
+    echo $file;die;
+}	    
+	    return $file_info;
+	}
+	
+	
 	
 	/**
 	 * finds all directories and folders and put them in an array
@@ -277,12 +210,22 @@ class Functions {
 	
 	/**
 	 * Finds the path info to a folder+ filename
-	 * @param String $dir -> Folder
-	 * @param String $filename -> filename
+	 * @param String $file -> path+filename
 	 * @return string
 	 */
-	public static function getFileInfo($dir, $filename) {
-	    return pathinfo($dir.$filename);
+	public static function getFileInfo($file) {
+	    $file_info = [];
+	    $pathInfo = pathinfo($file);
+	    foreach ($pathInfo as $k=>$v) {
+	        $file_info[$k]=$v;
+	    }
+	    
+	    $fulldata = self::findFullData($file);
+	    foreach ($fulldata as $k=>$v) {
+	        $file_info[$k]=$v;
+	    }
+	    
+	    return $file_info;
 	}
 	
 	/**

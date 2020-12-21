@@ -16,6 +16,21 @@ $_REPORT_PATH  = $info['report-path'];
 $_META_DATA    = $info['meta-data'];
 $_DUPLICATES   = $info['duplicates'];
 
+// $test = SplFileInfo::getFileInfo ('/home/idsmaster/Desktop/pictest/ffff/20160927_230128.mp4');
+// print_r($test);
+
+
+
+class MyFoo extends SplFileInfo {}
+
+$info = new SplFileInfo('/home/idsmaster/Desktop/pictest/ffff/20160927_230128.mp4');
+// Set the class name to use
+$info->setInfoClass('MyFoo');
+var_dump($info->getFileInfo());
+var_dump($info->getType());
+
+die;
+
 // Shows the header on the command line
 echo Functions::parseHeader();
 
@@ -26,10 +41,11 @@ $files = Functions::dirToArray($_CONTENT_PATH);
 //$data = Functions::dataToFile($_REPORT_PATH, $_META_DATA, $files);
 $data = $files;
 
-// Read the meta-data file, calculate hash, extensions, and write the dat into a temp file. 
+// Read the meta-data file, calculate hash, extensions
 $raw_hashed  = Functions::arrayToHash($data[0], $data[1]);
+//print_r($raw_hashed);die;
 
- 
+//Based on the hash of the files from previous function, everything gets sorted in to array of hash->path+filenames
 $temp = Functions::findDoublicateFiles($raw_hashed);
 var_dump($temp['douplicates']);
 
@@ -40,8 +56,8 @@ $singles = $temp['singles'];
 print_r($singles);
 //print_r($doublicates);
 die;    
-    echo "Duplicates:".count($doublicates).PHP_EOL;
-    echo "Total:".$files[1].PHP_EOL;
+echo "Duplicates:".count($doublicates).PHP_EOL;
+echo "Total:".$files[1].PHP_EOL;
     
 
 
