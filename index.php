@@ -10,26 +10,13 @@
   
 */
 
+
 require_once 'bootstrap.php';
 $_CONTENT_PATH = $info['content-path'];
 $_REPORT_PATH  = $info['report-path'];
 $_META_DATA    = $info['meta-data'];
 $_DUPLICATES   = $info['duplicates'];
 
-// $test = SplFileInfo::getFileInfo ('/home/idsmaster/Desktop/pictest/ffff/20160927_230128.mp4');
-// print_r($test);
-
-
-
-class MyFoo extends SplFileInfo {}
-
-$info = new SplFileInfo('/home/idsmaster/Desktop/pictest/ffff/20160927_230128.mp4');
-// Set the class name to use
-$info->setInfoClass('MyFoo');
-var_dump($info->getFileInfo());
-var_dump($info->getType());
-
-die;
 
 // Shows the header on the command line
 echo Functions::parseHeader();
@@ -47,7 +34,7 @@ $raw_hashed  = Functions::arrayToHash($data[0], $data[1]);
 
 //Based on the hash of the files from previous function, everything gets sorted in to array of hash->path+filenames
 $temp = Functions::findDoublicateFiles($raw_hashed);
-var_dump($temp['douplicates']);
+print_r($temp['douplicates']);
 
 die;
 $doublicates = $temp['douplicates'];

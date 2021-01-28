@@ -203,9 +203,8 @@ class Command{
 	* @return String
 	*/
 	public function getProgress(){ return $this->_PROGRESS;}
-
 	
-//------- Meta Data ---------------
+	//------- Meta Data ---------------
 	/**
 	 * Returns the Meta Data file name
 	 *

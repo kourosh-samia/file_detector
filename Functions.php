@@ -143,25 +143,7 @@ class Functions {
 	           ];
 	}
 
-	public static function findFullData($file){
-	    $file_info = [];
-	    try {
-	        $exif = exif_read_data($file,0,true);
-            foreach ($exif as $key => $section) {
-                foreach ($section as $name => $val) {
-                    $file_info[$name]=$val;
-                }
-            }
-	    } catch (Exception $e) {
-	        echo $file;die;
-	    }
-if (empty($file_info) ) {
-    echo $file;die;
-}	    
-	    return $file_info;
-	}
-	
-	
+
 	
 	/**
 	 * finds all directories and folders and put them in an array
@@ -219,12 +201,8 @@ if (empty($file_info) ) {
 	    foreach ($pathInfo as $k=>$v) {
 	        $file_info[$k]=$v;
 	    }
-	    
-	    $fulldata = self::findFullData($file);
-	    foreach ($fulldata as $k=>$v) {
-	        $file_info[$k]=$v;
-	    }
-	    
+	    $file_info['size'] = filesize($file);
+    
 	    return $file_info;
 	}
 	
