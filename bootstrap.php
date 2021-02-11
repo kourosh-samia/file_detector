@@ -4,14 +4,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('memory_limit', '256M');
 require_once 'lib/FileHandler.php';
-require_once 'Command.php';
-require_once 'Functions.php';
-$info = [];
+require_once 'lib/Command.php';
+require_once 'lib/Functions.php';
     
 $command = new Command($argv);
 
 // Load the Help manual on the console
-if ($command->getHelp()) { die(file_get_contents('help.txt').PHP_EOL);}
+if ($command->getHelp()) { die(file_get_contents('../dispatch/fd.man').PHP_EOL);}
 
 $info = [
         'content-path'         => $command->getContentPath(),

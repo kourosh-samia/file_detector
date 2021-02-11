@@ -1,81 +1,43 @@
-Usage: php index.php [options] [-v] [-h] --content-path <file> [--] [args...]
-
-  -v               
-  --v              
-  -verbose         
-  --verbose             Verbose
-
-  -V               
-  --V              
-  -version         
-  --version             Version
-
-  --dry-run             Runs a dry run and do NOT do anything
-
-  --progress
-  --p
-  -progress
-  -p                    Sets the progress flag on and application will show the progress bar  
-
   --content-path <path> Path to the content folders and files
   
   --report-path  <path> Path to the report files
-  
-  --purge               Delete the duplicate files
   
 Examples: 
 	php index.php -V --v	
 
 
-
-
-
-
 NAME
-       cp - copy files and directories
+       fd - Find duplicates files like pictures and videos. Then will purge or copy one instance based on the options it is called.  
 
 SYNOPSIS
-       cp [OPTION]... [-T] SOURCE DEST
-       cp [OPTION]... SOURCE... DIRECTORY
-       cp [OPTION]... -t DIRECTORY SOURCE...
+       fd [OPTION]... [-v] 
+       fd [OPTION]... [-v] [-d] --purge 
+       fd [OPTION]... [-V] [-n]
 
 DESCRIPTION
-       Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.
+       Delete duplicate images and videos And/Or Copy them to DEST DIRECTORY.
 
        Mandatory arguments to long options are mandatory for short options too.
 
-       -a, --archive
-              same as -dR --preserve=all
+       -v, -verbose
+              Verbose
 
-       --attributes-only
-              don't copy the file data, just the attributes
+       -V, -version
+              fd Version
 
-       --backup[=CONTROL]
-              make a backup of each existing destination file
+       -P, --purge
+              It will Delete the duplicate files in DEST Directories
 
-       -b     like --backup but does not accept an argument
+       -d     
+              Dry run. It only do a dry run and not take any actions
 
-       --copy-contents
-              copy contents of special files when recursive
+       -p
+              Show progress
 
-       -d     same as --no-dereference --preserve=links
+       -R     
+              Rename the files when getting copied to the new location or at the current location
 
-       -f, --force
-              if an existing destination file cannot be opened, remove it and try again (this option is ignored when the -n option is also used)
+       -N, --new-directory=DIRECTORY
 
-       -i, --interactive
-              prompt before overwrite (overrides a previous -n option)
+              Create new DIRECTORY and copy single of files there 
 
-       -H     follow command-line symbolic links in SOURCE
-
-       -l, --link
-              hard link files instead of copying
-
-       -L, --dereference
-              always follow symbolic links in SOURCE
-
-       -n, --no-clobber
-              do not overwrite an existing file (overrides a previous -i option)
-
-       -P, --no-dereference
-              never follow symbolic links in S

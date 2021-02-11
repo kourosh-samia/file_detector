@@ -9,17 +9,22 @@
  tag the picturs. > in web portel
   
 */
+global $info ;
 
-
-require_once 'bootstrap.php';
+require_once '../bootstrap.php';
 $_CONTENT_PATH = $info['content-path'];
 $_REPORT_PATH  = $info['report-path'];
 $_META_DATA    = $info['meta-data'];
 $_DUPLICATES   = $info['duplicates'];
+$_VERSION_FLAG = $info['version_flag'];
+$_VERSION      = $info['version'];
+
 
 
 // Shows the header on the command line
 echo Functions::parseHeader();
+
+if ($_VERSION_FLAG) {echo($_VERSION);}
 
 // reads all of the files and finds the paths and names and puts them in an array 
 $files = Functions::dirToArray($_CONTENT_PATH);
@@ -33,14 +38,14 @@ $raw_hashed  = Functions::arrayToHash($data[0], $data[1]);
 
 //Based on the hash of the files from previous function, everything gets sorted in to array of hash->path+filenames
 $temp = Functions::findDoublicateFiles($raw_hashed);
-print_r($temp['douplicates']);
+// print_r($temp['douplicates']);
+// die;
 
-die;
 $doublicates = $temp['douplicates'];
 $singles = $temp['singles'];
 
-print_r($singles);
-//print_r($doublicates);
+//print_r($singles);
+print_r($doublicates);
 die;    
 echo "Duplicates:".count($doublicates).PHP_EOL;
 echo "Total:".$files[1].PHP_EOL;

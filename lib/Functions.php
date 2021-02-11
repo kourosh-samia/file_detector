@@ -120,30 +120,62 @@ class Functions {
 	 * @return array -> douplicates, singles
 	 */
 	public static function findDoublicateFiles(array $hashed_records) {
+	    $stats['total_files'] = 0;
+	    $stats['total_sizes'] = 0;
+	    $stats['total_singles_files'] = 0;
+	    $stats['total_douplicates_files'] = 0;
+	    $stats['total_douplicates_size'] = 0;
+	    $stats['total_singles_size'] = 0;
 	    $douplicates = [];
 	    $singles = [];
 	    $temp = [];
 	    foreach ($hashed_records as $file => $hash){
+	        $stats['total_files'] = $stats['total_files'] + 1;
 	        $fileInfo = self::getFileInfo($file);
+	        $stats['total_sizes'] = $stats['total_sizes'] + $fileInfo['size']; 
             $temp[$hash][] = $fileInfo;
 	        unset($hashed_records[$file]);
-//print_r($temp);die;
 	    }
 	    
 	    foreach ($temp as $hash => $file){
 	        if (count($file)>1){
+	            $stats['total_douplicates_files'] = $stats['total_douplicates_files'] + count($file);
 	            $douplicates[$hash] = $file;
 	        }else{
+	            $stats['total_singles_files'] = $stats['total_singles_files'] + count($file);
 	            $singles[$hash] = $file;
 	        }
 	    }
 	    
+	    foreach ($douplicates as $key => $value){
+	        foreach ($value as $k => $v){
+	            $stats['total_douplicates_size'] = $stats['total_douplicates_size'] + $v['size'];
+	        }
+	    }
+	    
+	    foreach ($singles as $key => $value){
+	        foreach ($value as $k => $v){
+	            $stats['total_singles_size'] = $stats['total_singles_size'] + $v['size'];
+	        }
+	    }
+	    
 	    return ['douplicates'=>$douplicates,
-  	            'singles'=>$singles
+	            'singles'=>$singles,
+	            'stats'=>$stats,
 	           ];
 	}
-
-
+	
+	/**
+	 * Converst the size to a nicly formartted units
+	 * @param int $size
+	 * @return string
+	 */
+	public static function filesize_formatted($size)
+	{
+	    $units = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+	    $power = $size > 0 ? floor(log($size, 1024)) : 0;
+	    return number_format($size / pow(1024, $power), 2, '.', ',') . ' ' . $units[$power];
+	}
 	
 	/**
 	 * finds all directories and folders and put them in an array
@@ -159,18 +191,6 @@ class Functions {
 	            }else{
 	                self::$result[$dir][]  = $value;
 	                self::$row_count = self::$row_count + 1;
-	                
-	                
-	                
-// 	                self::$result[$dir][$value]['filename']  = $value;
-// 	                self::$result[$dir][$value]['hash']      = self::calHash($dir, $value);
-	                
-// 	                $fileInfo = self::getFileInfo($dir, $value);
-// 	                self::$result[$dir][$value]['extension'] = $fileInfo['extension'];
-// 	                print_r(self::$result);
-	                
-	                
-	                
 	            }
 	        }
 	    }
@@ -211,6 +231,8 @@ class Functions {
 	 * @param array $files -> folder=>filename
 	 */
 	public static function arrayToHash(array $files, $row_count){
+	    $total_files = 0;
+	    $total_sizes = 0;
 	    $result = array();
 	    $current_row = 1;
 	    $total = $row_count;

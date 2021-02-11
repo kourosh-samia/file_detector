@@ -48,23 +48,17 @@ class Command{
 				$temp = array();
 				$temp = explode(":", $v);
 				switch (trim($temp[0])) {
-					case '--help':
-					case '--h':
 					case '-help':
 					case '-h':
 					    $this->setHelp();
 					    break;
 					
-					case '--verbose':
-					case '--v':
 					case '-verbose':
 					case '-v':
 					    $this->setVerbose();
 					    break;
 					
 					case '--version':
-					case '--V':
-					case '-version':
 					case '-V':
 					    $this->setVersionFlag();
 					    break;
