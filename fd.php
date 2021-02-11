@@ -30,7 +30,6 @@ $data = $files;
 
 // Read the meta-data file, calculate hash, extensions
 $raw_hashed  = Functions::arrayToHash($data[0], $data[1]);
-//print_r($raw_hashed);die;
 
 //Based on the hash of the files from previous function, everything gets sorted in to array of hash->path+filenames
 $temp = Functions::findDoublicateFiles($raw_hashed);
