@@ -36,31 +36,14 @@ class Functions {
 	 * @author Kourosh Samia
 	 * @return string
 	 */
-	public static function parseHeader(){
+	public static function parseHeader($info){
 	    $output = "-----------------------------------------------".PHP_EOL;
 	    $output .= " Author: Kourosh Samia - OCT 2017              ".PHP_EOL;
-	    $output .= " File duplicate finder Version 1.0             ".PHP_EOL;
+	    $output .= " File duplicate finder Version ".$info['version']."             ".PHP_EOL;
 	    $output .= "-----------------------------------------------".PHP_EOL;
 	    return $output;
 	} 
 
-	/**
-	 * calculate the maximum length of an array of string and returns the longest one back
-	 * @param array $data -> array of strings
-	 * @return Int
-	 */
-	public static function getMaxLength(array $data){
-		$max_length = 0;
-		$max_string = '';
-		foreach ($data as $key=>$value) {
-			if(strlen($value)>$max_length){
-				$max_length=strlen($value);
-				$max_string =$value;	
-			}
-		}
-		return array('length'=>$max_length,
-					 'data'=>$max_string);
-	}
 	
 	/**
 	 * format the output and add proper character to the end of string
@@ -72,13 +55,24 @@ class Functions {
 	 * 
 	 * @return String
 	 */
-	public static function formatOutput($data, $space, $filler_char=' ', $right_left_both=STR_PAD_RIGHT, $return_char = FALSE){
+	public static function fodrmatOutput($data, $space, $filler_char=' ', $right_left_both=STR_PAD_RIGHT, $return_char = FALSE){
 		$temp = str_pad($data, $space, $filler_char, $right_left_both);
 		if($return_char){
 			return $temp.PHP_EOL;
 		}else{
 			return $temp;
 		}
+	}
+	
+	public static function outputStats($before, $after){
+	    echo PHP_EOL.PHP_EOL.'Stats:'.PHP_EOL.'======================================='.PHP_EOL;
+	    echo '             Files        Sizes'.PHP_EOL;
+	    echo "            {$before['total_files']}      {$before['total_sizes']}".PHP_EOL;
+	    echo "Singlets    {$before['total_singles_files']}       {$before['total_singles_size']} (".self::filesize_formatted($before['total_singles_size']).")".PHP_EOL;
+	    echo "Duplicates  {$before['total_duplicates_files']}     {$before['total_duplicates_size']} (".self::filesize_formatted($before['total_duplicates_size']).")".PHP_EOL;
+	    echo '---------------------------------------'.PHP_EOL;
+	    echo "Purged      {$after['total_purged_files']}      {$after['total_purged_file_sizes']} (".self::filesize_formatted($after['total_purged_file_sizes']).")".PHP_EOL;
+	    echo '======================================='.PHP_EOL;
 	}
 
   /**
@@ -114,17 +108,133 @@ class Functions {
 	
 //==============================================================================
 
+	public static function dispatch($info, $files) {
+	    $stats = [];
+	    $duplicates = $files['duplicates']; 
+	    $dryrun = $info['dryrun'];
+	    $purge  = $info['purge'];
+//	    $new    = $info['new'];
+//	    $rename = $info['rename'];
+	    
+	    if ($purge) {
+	        echo '> Purgging...'.PHP_EOL;
+	        $stats = self::purge($duplicates, $dryrun);
+	    }
+	    return $stats;
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+// 	    if ($new) {
+// 	        if (!$dryrun) {
+// 	            // create distination folder
+// 	            if ($rename) {
+// 	                //for singles
+// 	                // create rename file name
+// 	                self::copy();
+// 	                if ($purge) {
+// 	                    self::purge();
+// 	                }
+	                
+// 	                //for duplicates
+// 	                // create rename file name
+// 	                self::copy();
+// 	                if ($purge) {
+// 	                    self::purge();
+// 	                }
+	                
+// 	            }else{
+// 	                //for singles
+// 	                self::copy();
+// 	                if ($purge) {
+// 	                    self::purge();
+// 	                }
+	                
+// 	                //for duplicates
+// 	                self::copy();
+// 	                if ($purge) {
+// 	                    self::purge();
+// 	                }
+// 	            }
+	            
+// 	        }else{
+// 	            // calculate stats for copy and purged files
+// 	            self::purge();
+// 	        }
+	        
+// 	    }else{
+// 	        if (!$dryrun) {
+// 	            self::purge();
+// 	            // get purged stats
+// 	        }else{
+//                 // get purged stats	            
+// 	        }
+	            
+// 	    }
+	    
+	}
+
+	/**
+	 * Purge the duplicate files and returns the status of number of deleted file and size of them
+	 * @param array $duplicates
+	 * @param integer $dryrun
+	 * @return array
+	 */
+	public static function purge($duplicates, $dryrun) {
+	    $stats['total_purged_files']      = 0;
+	    $stats['total_purged_file_sizes'] = 0;
+	    
+	    if ($dryrun) {
+	        foreach ($duplicates as $hash => $files) {
+	            if(count($files)>1){
+	                unset($files[0]);
+                    foreach ($files as $file) {
+                        $stats['total_purged_files']      = $stats['total_purged_files'] + 1;
+                        $stats['total_purged_file_sizes'] = $stats['total_purged_file_sizes'] + $file['size'];
+                    }    	                
+	            }
+	        }
+	    }else{
+	        foreach ($duplicates as $hash => $files) {
+	            if(count($files)>1){
+
+	                unset($files[0]);
+	                foreach ($files as $file) {
+	                
+	                    $stats['total_purged_files']      = $stats['total_purged_files'] + 1;
+	                    $stats['total_purged_file_sizes'] = $stats['total_purged_file_sizes'] + $file['size'];
+	                    try {
+	                        unlink($file['dirname'].'/'.$file['basename']);
+	                    } catch (Exception $e) {
+	                        echo 'Caught exception: ',  $e->getMessage(), "\n";
+	                    }
+	                }
+	            }
+	        }
+	    }
+	    return $stats;
+	}
+	
 	/**
 	 * Find the duplicates and create a uniqu array
 	 * @param string array $hashed_records
 	 * @return array -> douplicates, singles
 	 */
-	public static function findDoublicateFiles(array $hashed_records) {
+	public static function findDuplicatesFiles(array $hashed_records) {
+	    echo ('> Finding Duplicates...').PHP_EOL;
 	    $stats['total_files'] = 0;
 	    $stats['total_sizes'] = 0;
 	    $stats['total_singles_files'] = 0;
-	    $stats['total_douplicates_files'] = 0;
-	    $stats['total_douplicates_size'] = 0;
+	    $stats['total_duplicates_files'] = 0;
+	    $stats['total_duplicates_size'] = 0;
 	    $stats['total_singles_size'] = 0;
 	    $douplicates = [];
 	    $singles = [];
@@ -139,7 +249,7 @@ class Functions {
 	    
 	    foreach ($temp as $hash => $file){
 	        if (count($file)>1){
-	            $stats['total_douplicates_files'] = $stats['total_douplicates_files'] + count($file);
+	            $stats['total_duplicates_files'] = $stats['total_duplicates_files'] + count($file);
 	            $douplicates[$hash] = $file;
 	        }else{
 	            $stats['total_singles_files'] = $stats['total_singles_files'] + count($file);
@@ -149,7 +259,7 @@ class Functions {
 	    
 	    foreach ($douplicates as $key => $value){
 	        foreach ($value as $k => $v){
-	            $stats['total_douplicates_size'] = $stats['total_douplicates_size'] + $v['size'];
+	            $stats['total_duplicates_size'] = $stats['total_duplicates_size'] + $v['size'];
 	        }
 	    }
 	    
@@ -159,9 +269,9 @@ class Functions {
 	        }
 	    }
 	    
-	    return ['douplicates'=>$douplicates,
-	            'singles'=>$singles,
-	            'stats'=>$stats,
+	    return ['duplicates' => $douplicates,
+	            'singles'    => $singles,
+	            'stats'      => $stats,
 	           ];
 	}
 	
@@ -170,8 +280,7 @@ class Functions {
 	 * @param int $size
 	 * @return string
 	 */
-	public static function filesize_formatted($size)
-	{
+	public static function filesize_formatted($size){
 	    $units = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 	    $power = $size > 0 ? floor(log($size, 1024)) : 0;
 	    return number_format($size / pow(1024, $power), 2, '.', ',') . ' ' . $units[$power];
@@ -197,7 +306,6 @@ class Functions {
 	    $output = array(self::$result, self::$row_count);
 	    return $output;
 	}
-
 	
 	/**
 	 * Calculate the hash of teh given file
@@ -230,7 +338,8 @@ class Functions {
 	 * Calculates the hash of the array of folder and filenames 
 	 * @param array $files -> folder=>filename
 	 */
-	public static function arrayToHash(array $files, $row_count){
+	public static function arrayToHash(array $files, $row_count, $verbose){
+	    echo ('> Reading all files...').PHP_EOL;
 	    $total_files = 0;
 	    $total_sizes = 0;
 	    $result = array();
@@ -239,7 +348,8 @@ class Functions {
 	    foreach ($files as $folder => $filenames) {
     	    foreach ($filenames as $key => $filename) {
     	        $result[$folder.DIRECTORY_SEPARATOR.$filename] = self::calHash($folder, $filename);
-    	        self::show_status($current_row, $total);
+    	        ($verbose)?self::show_status($current_row, $total):'';
+//    	        self::show_status($current_row, $total);
     	        $current_row = $current_row + 1;    	        
        	    }
 	    }
@@ -297,6 +407,4 @@ class Functions {
             echo "\n";
         }
 	}
-//==============================================================================
-	
 }

@@ -20,8 +20,8 @@ $info = [
         'dryrun'               => $command->getDryRun(),
         'verbose'              => $command->getVerbose(),
         'progress'             => $command->getProgress(),
-        'version_flag'         => $command->getVersionFlag(),
-        'version'              => $command->getVersion()
+        'version'              => $command->getVersion(),
+        'purge'                => $command->getPurge()
 ];
     
-print_r($info);
+//print_r($info);

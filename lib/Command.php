@@ -3,7 +3,6 @@ class Command{
 	private $command = array();
 	
 	private $_HELP           = FALSE;                               // Shows the help
-	private $_VERSION_FLAG   = FALSE;                               // Version flag
 	private $_VERSION        = '1.0';                               // Version
 	private $_VERBOSE        = FALSE;                               // Puts the output on the screen
 	private $_DRYRUN         = FALSE;                               // Flag to run a dry run test
@@ -53,17 +52,13 @@ class Command{
 					    $this->setHelp();
 					    break;
 					
-					case '-verbose':
+					case '--verbose':
 					case '-v':
 					    $this->setVerbose();
 					    break;
 					
-					case '--version':
-					case '-V':
-					    $this->setVersionFlag();
-					    break;
-					
 					case '--dry-run':
+					case '-D':
 						$this->setDryRun();
 					    break;
 					    
@@ -84,6 +79,7 @@ class Command{
 				        break;
 				        
 			        case '--purge':
+			        case '-P':    
 			            $this->setPurge();
 			            break;
 
@@ -215,19 +211,6 @@ class Command{
 	public function getDuplicates(){ return $this->_DUPLICATE;}
 	
 //------- Version ---------------
-  /**
-	* Sets the Version Flag
-	* @param version_flag-> String
-	*
-	*/
-	private function setVersionFlag($version_flag=TRUE){ $this->_VERSION_FLAG = $version_flag;}
-	
-  /**
-	* Returns the Version flag
-    *
-	* @return String
-	*/
-	public function getVersionFlag(){ return $this->_VERSION_FLAG;}
 	
   /**
 	* Returns the Version value
