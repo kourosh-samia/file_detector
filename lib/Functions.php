@@ -172,59 +172,20 @@ class Functions {
 	            $stats['renamed_stats']['total_renamed_file_sizes'] = $temp['total_renamed_file_sizes'];
 	        }
 	    }
-	        
-	    if ($rename && !$new){
-            echo '> Renaming ...'.PHP_EOL;
-	    }
+
 	    return $stats;
 	}
 	
 	/**
+	 * 
 	 * Purge the duplicate files and returns the status of number of deleted file and size of them
 	 * @param array $singles array of singles
+	 * @param array $duplicates array of duplicates
 	 * @param array $destination path to new location to copy files
+	 * @param boolean $purge flag if files needs to be purged
 	 * @param boolean $rename flag if the files should be renamed or not
 	 * @param boolean $dryrun flag if you want only the dryrun
-	 * @return array
-	 */
-	public static function rename($singles, $destination, $rename=FALSE, $dryrun=TRUE) {
-	    $stats['total_renamed_files']      = 0;
-	    $stats['total_renamed_file_sizes'] = 0;
-	    $new_file_name = 0;
-	    
-	    if ($dryrun) {
-	        foreach ($singles as $hash => $files) {
-	            foreach ($files as $file) {
-                    $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
-                    $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
-	            }
-	        }
-	    }else{
-	        foreach ($singles as $hash => $files) {
-	            foreach ($files as $file) {
-	                    
-                    ++$new_file_name;
-                    $source = $file['dirname'].'/'.$file['basename'];
-                    $target = $destination.'/'.$new_file_name.'.'.$file['extension'];
-                    
-                    if (!rename($source, $target)) {
-                        echo "failed to rename $source -> $target...\n";
-                    }else {
-                        $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
-                        $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
-                    }
-    	        }
-	        }
-	    }
-	    return $stats;
-	}
-	
-	/**
-	 * Purge the duplicate files and returns the status of number of deleted file and size of them
-	 * @param array $singles array of singles
-	 * @param array $destination path to new location to copy files
-	 * @param boolean $rename flag if the files should be renamed or not
-	 * @param boolean $dryrun flag if you want only the dryrun
+	 * @param boolean $verbose flag if the message should be output on the screen or not
 	 * @return array
 	 */
 	public static function new($singles, $duplicates, $destination, $purge=FALSE, $rename=FALSE, $dryrun=TRUE, $verbose=TRUE) {
@@ -331,6 +292,11 @@ class Functions {
 	    return $stats;
 	}
 	
+	/**
+	 * Outouts the message with respects to verbosity
+	 * @param String $message -> Message to be output on the screen
+	 * @param boolean $verbose 
+	 */
 	private static function output_message($message, $verbose) {
 	    if($verbose){
 	        echo $message.PHP_EOL;
@@ -367,7 +333,7 @@ class Functions {
 	 * @param integer $dryrun
 	 * @return array
 	 */
-	public static function purge($duplicates, $singlets, $dryrun) {
+	public static function purge($duplicates, $singlets, $dryrun, $verbose) {
 	    $stats['total_purged_files']      = 0;
 	    $stats['total_purged_file_sizes'] = 0;
 	    $stats['singles'] = $singlets;
@@ -396,6 +362,7 @@ class Functions {
 	                    $stats['total_purged_files']      = $stats['total_purged_files'] + 1;
 	                    $stats['total_purged_file_sizes'] = $stats['total_purged_file_sizes'] + $file['size'];
 	                    try {
+	                        self::output_message("Purgging $file['dirname'].'/'.$file['basename']", $verbose);
 	                        unlink($file['dirname'].'/'.$file['basename']);
 	                    } catch (Exception $e) {
 	                        echo 'Caught exception: ',  $e->getMessage(), "\n";
