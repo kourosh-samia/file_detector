@@ -6,11 +6,11 @@ class Command{
 	private $_VERSION        = '1.0';                               // Version
 	private $_VERBOSE        = FALSE;                               // Puts the output on the screen
 	private $_DRYRUN         = FALSE;                               // Flag to run a dry run test
+	private $_RENAME         = FALSE;                               // Rename the files
 	private $_CONTENT_PATH   = '/home/idsmaster/Desktop/pictest/';  // The location to the files
 	private $_REPORT_PATH    = '/home/idsmaster/Desktop/pictest/';  // The location to the temp files 
 	private $_META_DATA      = 'meta_data.csv';                     // Meta Data filename
-	private $_DUPLICATE      = 'duplicate.csv';                     // Duplicate filename
-	private $_PROGRESS       = FALSE;                               // Shows the progress bar
+	private $_NEW            = '';                                  // path and folder name for the new location to copy the files to
 	private $_PURGE          = FALSE;                               // Delete the files physically and not copy somewhere else
 	
 	/**
@@ -58,18 +58,20 @@ class Command{
 					    break;
 					
 					case '--dry-run':
-					case '-D':
+					case '-d':
 						$this->setDryRun();
 					    break;
 					    
-				    case '--progress':
-				    case '--p':
-				    case '-progress':
-				    case '-p':
-				        $this->setProgress();
-				        break;
-					        	
+					case '--rename':
+					case '-r':
+					    $this->setRename();
+					    break;
+					    
 //=========================================================
+				    case '--new':
+				        $this->checkArgument($temp, 'new');
+				        break;
+				        
 				    case '--content-path':
 				        $this->checkArgument($temp, 'content-path');
 				        break;
@@ -93,17 +95,21 @@ class Command{
 	}
 
 	private function checkArgument($temp, $msg_source) {
-		if(count($temp)==1){ 
+	    if(count($temp)==1){ // only key exist and not an argument - Look for warning message
 			die(Functions::getSysMsgSource($msg_source));
 		}else{
-			if(trim($temp[1])==''){
+		    if(trim($temp[1])==''){// if the argument is empty - Look for the error message
 				die(Functions::getSysMsgSource($msg_source, 'error'));	
 			}else{
 				switch ($msg_source) {
-					case 'content-path':
-					    $this->setContentPath(trim($temp[1]));
-					    break;
-					    
+				    case 'new':
+				        $this->setNew(trim($temp[1]));
+				        break;
+				        
+				    case 'content-path':
+				        $this->setContentPath(trim($temp[1]));
+				        break;
+				        
 					case 'report-path':
 					    $this->setReportPath(trim($temp[1]));
 					    break;
@@ -179,36 +185,28 @@ class Command{
 	 */
 	public function getPurge(){ return $this->_PURGE;}
 	
-//------- Progress ---------------
+//------- Rename ---------------
    /**
-	 * Sets the Progress
-	 * @param progress-> String
+	 * Sets the Rename
+	 * @param rename-> Boolean
 	 *
 	 */
-	private function setProgress($progress=TRUE){ $this->_PROGRESS = $progress;}
+	private function setRename($rename=TRUE){ $this->_RENAME = $rename;}
 	  
   /**
-	* Returns the Progress value
+	* Returns the Rename value
 	*
 	* @return String
 	*/
-	public function getProgress(){ return $this->_PROGRESS;}
+	public function getRename(){ return $this->_RENAME;}
 	
-	//------- Meta Data ---------------
+//------- Meta Data ---------------
 	/**
 	 * Returns the Meta Data file name
 	 *
 	 * @return String
 	 */
 	public function getMetaData(){ return $this->_META_DATA;}
-	
-//------- Duplicates ---------------
-  /**
-	* Returns the Duplicates file name
-	*
-	* @return String
-	*/
-	public function getDuplicates(){ return $this->_DUPLICATE;}
 	
 //------- Version ---------------
 	
@@ -219,6 +217,33 @@ class Command{
 	*/
     public function getVersion(){ return $this->_VERSION;}
 	  
+// ------- New Path ---------------
+    /**
+     * Sets the New Path
+     * @param new-> String
+     *
+     */
+    private function setNew($new){
+        if (substr($new, -1)=='/'){
+            $new = substr($new, 0, -1);
+        }
+        
+        $this->_NEW = $new;
+    }
+    
+    /**
+     * Returns the New value
+     *
+     * @return String
+     */
+    public function getNew(){
+        if (substr($this->_NEW, -1)=='/'){
+            return substr($this->_NEW, 0, -1);
+        }
+        
+        return $this->_NEW;
+    }
+    
 // ------- Content Path ---------------
   /**
    * Sets the Content Path 

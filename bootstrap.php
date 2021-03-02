@@ -6,7 +6,7 @@ ini_set('memory_limit', '256M');
 require_once 'lib/FileHandler.php';
 require_once 'lib/Command.php';
 require_once 'lib/Functions.php';
-    
+require_once '../dispatch/Error_Messages.php';    
 $command = new Command($argv);
 
 // Load the Help manual on the console
@@ -16,12 +16,12 @@ $info = [
         'content-path'         => $command->getContentPath(),
         'report-path'          => $command->getReportPath(),
         'meta-data'            => $command->getMetaData(),
-        'duplicates'           => $command->getDuplicates(),
         'dryrun'               => $command->getDryRun(),
         'verbose'              => $command->getVerbose(),
-        'progress'             => $command->getProgress(),
+        'rename'               => $command->getRename(),
         'version'              => $command->getVersion(),
-        'purge'                => $command->getPurge()
+        'purge'                => $command->getPurge(),
+        'new'                  => $command->getNew()
 ];
     
-//print_r($info);
+print_r($info);

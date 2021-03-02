@@ -6,8 +6,8 @@ class Functions {
 	static private $row_count = 0;
 	
 	public function __construct(){
-	    $this->setConfig(Error_messages::getEMessages());
-	}
+	    $this->setConfig(Error_Messages::getEMessages());
+	} 
 	
 	private function setConfig($config){
 		$this->config = $config;
@@ -70,8 +70,22 @@ class Functions {
 	    echo "            {$before['total_files']}      {$before['total_sizes']}".PHP_EOL;
 	    echo "Singlets    {$before['total_singles_files']}       {$before['total_singles_size']} (".self::filesize_formatted($before['total_singles_size']).")".PHP_EOL;
 	    echo "Duplicates  {$before['total_duplicates_files']}     {$before['total_duplicates_size']} (".self::filesize_formatted($before['total_duplicates_size']).")".PHP_EOL;
-	    echo '---------------------------------------'.PHP_EOL;
-	    echo "Purged      {$after['total_purged_files']}      {$after['total_purged_file_sizes']} (".self::filesize_formatted($after['total_purged_file_sizes']).")".PHP_EOL;
+	    
+	    if (count($after['purged_stats'])>0) {
+	        echo '---------------------------------------'.PHP_EOL;
+	        echo "Purged      {$after['purged_stats']['total_purged_files']}      {$after['purged_stats']['total_purged_file_sizes']} (".self::filesize_formatted($after['purged_stats']['total_purged_file_sizes']).")".PHP_EOL;
+	        echo "Singles      ".count($after['purged_stats']['singles']).PHP_EOL;
+	    }
+	    
+	    if (count($after['copied_stats'])>0) {
+	        echo '---------------------------------------'.PHP_EOL;
+	        echo "Copied      {$after['copied_stats']['total_copied_files']}      {$after['copied_stats']['total_copied_file_sizes']} (".self::filesize_formatted($after['copied_stats']['total_copied_file_sizes']).")".PHP_EOL;
+	    }
+	    
+	    if (count($after['renamed_stats'])>0) {
+	        echo '---------------------------------------'.PHP_EOL;
+	        echo "Renamed      {$after['renamed_stats']['total_renamed_files']}      {$after['renamed_stats']['total_renamed_file_sizes']} (".self::filesize_formatted($after['renamed_stats']['total_renamed_file_sizes']).")".PHP_EOL;
+	    }
 	    echo '======================================='.PHP_EOL;
 	}
 
@@ -109,92 +123,232 @@ class Functions {
 //==============================================================================
 
 	public static function dispatch($info, $files) {
-	    $stats = [];
-	    $duplicates = $files['duplicates']; 
+	    $stats = [
+	               'purged_stats' =>[
+	                                'singles'=>$files['singles'],
+            	                    'total_purged_files'=> 0,
+	                                'total_purged_file_sizes'=> 0
+                	                ],
+	               'copied_stats'  =>[
+	                                'total_copied_files'=> 0,
+	                                'total_copied_file_sizes'=> 0
+	                                ],
+	               'renamed_stats' =>[
+             	                    'total_renamed_files'=> 0,
+            	                    'total_renamed_file_sizes'=> 0
+                	               ],
+	    ];
+
 	    $dryrun = $info['dryrun'];
 	    $purge  = $info['purge'];
-//	    $new    = $info['new'];
-//	    $rename = $info['rename'];
+	    $new    = $info['new'];
+	    $rename = $info['rename'];
 	    
 	    if ($purge) {
 	        echo '> Purgging...'.PHP_EOL;
-	        $stats = self::purge($duplicates, $dryrun);
+	        $stats['purged_stats']= self::purge($files['duplicates'], $files['singles'], $dryrun);
+	    }
+	    
+	    if ($new) {
+	        echo '> Coping to new folder ...'.PHP_EOL;
+	        $temp= self::new($stats['purged_stats']['singles'], $files['duplicates'], $new, $purge, $rename, $dryrun);
+
+	        $stats['copied_stats']['total_copied_files']      = $temp['total_copied_files'];
+	        $stats['copied_stats']['total_copied_file_sizes'] = $temp['total_copied_file_sizes'];
+
+	        if ($rename){
+	            $stats['renamed_stats']['total_renamed_files']      = $temp['total_renamed_files'];
+	            $stats['renamed_stats']['total_renamed_file_sizes'] = $temp['total_renamed_file_sizes'];
+	        }
+	    }
+	        
+	    if ($rename && !$new){
+	       echo '> Renaming ...'.PHP_EOL;
+	       
 	    }
 	    return $stats;
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-// 	    if ($new) {
-// 	        if (!$dryrun) {
-// 	            // create distination folder
-// 	            if ($rename) {
-// 	                //for singles
-// 	                // create rename file name
-// 	                self::copy();
-// 	                if ($purge) {
-// 	                    self::purge();
-// 	                }
-	                
-// 	                //for duplicates
-// 	                // create rename file name
-// 	                self::copy();
-// 	                if ($purge) {
-// 	                    self::purge();
-// 	                }
-	                
-// 	            }else{
-// 	                //for singles
-// 	                self::copy();
-// 	                if ($purge) {
-// 	                    self::purge();
-// 	                }
-	                
-// 	                //for duplicates
-// 	                self::copy();
-// 	                if ($purge) {
-// 	                    self::purge();
-// 	                }
-// 	            }
-	            
-// 	        }else{
-// 	            // calculate stats for copy and purged files
-// 	            self::purge();
-// 	        }
-	        
-// 	    }else{
-// 	        if (!$dryrun) {
-// 	            self::purge();
-// 	            // get purged stats
-// 	        }else{
-//                 // get purged stats	            
-// 	        }
-	            
-// 	    }
-	    
 	}
-
+	
+	/**
+	 * Purge the duplicate files and returns the status of number of deleted file and size of them
+	 * @param array $singles array of singles
+	 * @param array $destination path to new location to copy files
+	 * @param boolean $rename flag if the files should be renamed or not
+	 * @param boolean $dryrun flag if you want only the dryrun
+	 * @return array
+	 */
+	public static function rename($singles, $destination, $rename=FALSE, $dryrun=TRUE) {
+	    $stats['total_renamed_files']      = 0;
+	    $stats['total_renamed_file_sizes'] = 0;
+	    $new_file_name = 0;
+	    
+	    if ($dryrun) {
+	        foreach ($singles as $hash => $files) {
+	            foreach ($files as $file) {
+                    $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
+                    $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
+	            }
+	        }
+	    }else{
+	        foreach ($singles as $hash => $files) {
+	            foreach ($files as $file) {
+	                    
+                    ++$new_file_name;
+                    $source = $file['dirname'].'/'.$file['basename'];
+                    $target = $destination.'/'.$new_file_name.'.'.$file['extension'];
+                    
+                    if (!rename($source, $target)) {
+                        echo "failed to rename $source -> $target...\n";
+                    }else {
+                        $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
+                        $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
+                    }
+    	        }
+	        }
+	    }
+	    return $stats;
+	}
+	
+	/**
+	 * Purge the duplicate files and returns the status of number of deleted file and size of them
+	 * @param array $singles array of singles
+	 * @param array $destination path to new location to copy files
+	 * @param boolean $rename flag if the files should be renamed or not
+	 * @param boolean $dryrun flag if you want only the dryrun
+	 * @return array
+	 */
+	public static function new($singles, $duplicates, $destination, $purge=FALSE, $rename=FALSE, $dryrun=TRUE) {
+	    $stats['total_copied_files']       = 0;
+	    $stats['total_copied_file_sizes']  = 0;
+	    $stats['total_renamed_files']      = 0;
+	    $stats['total_renamed_file_sizes'] = 0;
+	    $new_file_name = 0;
+	    if (!self::folder_exist($destination)) {
+	        echo("creating $destination ...".PHP_EOL);
+	        mkdir($destination, 0777);
+	    }
+	    
+	    if ($dryrun) {
+	        foreach ($singles as $hash => $files) {
+                foreach ($files as $file) {
+                    $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                    $stats['total_copied_file_sizes'] = $stats['total_copied_file_sizes'] + $file['size'];
+                    
+                    if ($rename) {
+                        $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
+                        $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
+                    }
+                }
+	        }
+	    }else{
+	        foreach ($singles as $hash => $files) {
+                foreach ($files as $file) {
+                    if ($rename) {
+                        
+                        ++$new_file_name;
+                        $source = $file['dirname'].'/'.$file['basename'];
+                        $target = $destination.'/'.$new_file_name.'.'.$file['extension'];
+                        
+                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        if (!copy($source, $target)) {
+                            echo "failed to copy $source...\n";
+                        }else {
+                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $file['size'];
+                            $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
+                            $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $file['size'];
+                        }
+                    }else{
+                        $source = $file['dirname'].'/'.$file['basename'];
+                        $target = $destination.'/'.$file['basename'];
+                        
+                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        if (!copy($source, $target)) {
+                            echo "failed to copy $source...\n";
+                        }else {
+                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $file['size'];
+                        }
+                    }
+                }
+	        }
+            echo ("--------------------------------------------------------------".PHP_EOL);	        
+	        if(!$purge){
+	            // Here only one of the duplicates will be copied. That's why we have [0]
+	            foreach ($duplicates as $hash => $files) {
+                    if ($rename) {
+                        
+                        ++$new_file_name;
+                        $source = $files[0]['dirname'].'/'.$files[0]['basename'];
+                        $target = $destination.'/'.$new_file_name.'.'.$files[0]['extension'];
+                        
+                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        if (!copy($source, $target)) {
+                            echo "failed to copy $source...\n";
+                        }else {
+                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
+                            $stats['total_renamed_files']      = $stats['total_renamed_files'] + 1;
+                            $stats['total_renamed_file_sizes'] = $stats['total_renamed_file_sizes'] + $files[0]['size'];
+                        }
+                    }else{
+                        $source = $files[0]['dirname'].'/'.$files[0]['basename'];
+                        $target = $destination.'/'.$files[0]['basename'];
+                        
+                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        if (!copy($source, $target)) {
+                            echo "failed to copy $source...\n";
+                        }else {
+                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
+                        }
+                    }
+	            }
+	        }
+	    }
+	    return $stats;
+	}
+	
+	/**
+	 * Checks if a folder exist and return canonicalized absolute pathname (long version)
+	 * @param string $folder the path being checked.
+	 * @return mixed returns the canonicalized absolute pathname on success otherwise FALSE is returned
+	 */
+	private static function folder_exist($folder)
+	{
+	    // Get canonicalized absolute pathname
+	    $path = realpath($folder);
+	    
+	    // If it exist, check if it's a directory
+	    if($path !== false AND is_dir($path))
+	    {
+	        // Return canonicalized absolute pathname
+	        return $path;
+	    }
+	    
+	    // Path/folder does not exist
+	    return false;
+	}
+	
+	
+	
 	/**
 	 * Purge the duplicate files and returns the status of number of deleted file and size of them
 	 * @param array $duplicates
+	 * @param array $singlets
 	 * @param integer $dryrun
 	 * @return array
 	 */
-	public static function purge($duplicates, $dryrun) {
+	public static function purge($duplicates, $singlets, $dryrun) {
 	    $stats['total_purged_files']      = 0;
 	    $stats['total_purged_file_sizes'] = 0;
-	    
+	    $stats['singles'] = $singlets;
+
 	    if ($dryrun) {
 	        foreach ($duplicates as $hash => $files) {
 	            if(count($files)>1){
+	                
+	                $singlets[$hash][0]= $files[0];
 	                unset($files[0]);
                     foreach ($files as $file) {
                         $stats['total_purged_files']      = $stats['total_purged_files'] + 1;
@@ -202,10 +356,12 @@ class Functions {
                     }    	                
 	            }
 	        }
+	        $stats['singles'] = $singlets;
 	    }else{
 	        foreach ($duplicates as $hash => $files) {
 	            if(count($files)>1){
 
+                    $singlets[$hash][0]= $files[0];
 	                unset($files[0]);
 	                foreach ($files as $file) {
 	                
@@ -219,7 +375,9 @@ class Functions {
 	                }
 	            }
 	        }
+	        $stats['singles'] = $singlets;
 	    }
+	    
 	    return $stats;
 	}
 	
