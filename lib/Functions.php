@@ -262,7 +262,7 @@ class Functions {
                         
                         self::output_message("Copying {$source} -> $target", $verbose);
                         if (!copy($source, $target)) {
-                            self::output_message("failed to copy $source...", $verbose);
+                            self::output_message("failed to copy {$source} ", $verbose);
                         }else {
                             $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
                             $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
@@ -362,7 +362,7 @@ class Functions {
 	                    $stats['total_purged_files']      = $stats['total_purged_files'] + 1;
 	                    $stats['total_purged_file_sizes'] = $stats['total_purged_file_sizes'] + $file['size'];
 	                    try {
-	                        self::output_message("Purgging $file['dirname'].'/'.$file['basename']", $verbose);
+	                        self::output_message("Purgging {$file['dirname']}/{$file['basename']}", $verbose);
 	                        unlink($file['dirname'].'/'.$file['basename']);
 	                    } catch (Exception $e) {
 	                        echo 'Caught exception: ',  $e->getMessage(), "\n";
