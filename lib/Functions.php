@@ -87,6 +87,13 @@ class Functions {
 	        echo "Renamed      {$after['renamed_stats']['total_renamed_files']}      {$after['renamed_stats']['total_renamed_file_sizes']} (".self::filesize_formatted($after['renamed_stats']['total_renamed_file_sizes']).")".PHP_EOL;
 	    }
 	    echo '======================================='.PHP_EOL;
+
+	    if(!empty($after['copied_stats']['error'])) {
+	        foreach ($after['copied_stats']['error'] as $error) {
+    	        echo($error.PHP_EOL);
+    	    }
+	    }
+	    
 	}
 
   /**
@@ -131,7 +138,8 @@ class Functions {
                 	                ],
 	               'copied_stats'  =>[
 	                                'total_copied_files'=> 0,
-	                                'total_copied_file_sizes'=> 0
+	                                'total_copied_file_sizes'=> 0,
+	                                'error'=>[]
 	                                ],
 	               'renamed_stats' =>[
              	                    'total_renamed_files'=> 0,
@@ -139,20 +147,23 @@ class Functions {
                 	               ],
 	    ];
 
-	    $dryrun = $info['dryrun'];
-	    $purge  = $info['purge'];
-	    $new    = $info['new'];
-	    $rename = $info['rename'];
+	    $dryrun  = $info['dryrun'];
+	    $purge   = $info['purge'];
+	    $new     = $info['new'];
+	    $rename  = $info['rename'];
+	    $verbose = $info['verbose'];
+	        
 	    
 	    if ($purge) {
-	        echo '> Purgging...'.PHP_EOL;
-	        $stats['purged_stats']= self::purge($files['duplicates'], $files['singles'], $dryrun);
+            echo '> Purgging...'.PHP_EOL;
+	        $stats['purged_stats']= self::purge($files['duplicates'], $files['singles'], $dryrun, $verbose);
 	    }
 	    
 	    if ($new) {
 	        echo '> Coping to new folder ...'.PHP_EOL;
-	        $temp= self::new($stats['purged_stats']['singles'], $files['duplicates'], $new, $purge, $rename, $dryrun);
+	        $temp= self::new($stats['purged_stats']['singles'], $files['duplicates'], $new, $purge, $rename, $dryrun, $verbose);
 
+	        $stats['copied_stats']['error']                   = $temp['error'];
 	        $stats['copied_stats']['total_copied_files']      = $temp['total_copied_files'];
 	        $stats['copied_stats']['total_copied_file_sizes'] = $temp['total_copied_file_sizes'];
 
@@ -163,8 +174,7 @@ class Functions {
 	    }
 	        
 	    if ($rename && !$new){
-	       echo '> Renaming ...'.PHP_EOL;
-	       
+            echo '> Renaming ...'.PHP_EOL;
 	    }
 	    return $stats;
 	}
@@ -217,14 +227,16 @@ class Functions {
 	 * @param boolean $dryrun flag if you want only the dryrun
 	 * @return array
 	 */
-	public static function new($singles, $duplicates, $destination, $purge=FALSE, $rename=FALSE, $dryrun=TRUE) {
+	public static function new($singles, $duplicates, $destination, $purge=FALSE, $rename=FALSE, $dryrun=TRUE, $verbose=TRUE) {
 	    $stats['total_copied_files']       = 0;
 	    $stats['total_copied_file_sizes']  = 0;
 	    $stats['total_renamed_files']      = 0;
 	    $stats['total_renamed_file_sizes'] = 0;
-	    $new_file_name = 0;
+	    $stats['error']=[];
+	    $new_file_name=0;
+	    
 	    if (!self::folder_exist($destination)) {
-	        echo("creating $destination ...".PHP_EOL);
+	        self::output_message("creating $destination ...", $verbose);
 	        mkdir($destination, 0777);
 	    }
 	    
@@ -249,9 +261,9 @@ class Functions {
                         $source = $file['dirname'].'/'.$file['basename'];
                         $target = $destination.'/'.$new_file_name.'.'.$file['extension'];
                         
-                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        self::output_message("Copying {$source} -> $target", $verbose);
                         if (!copy($source, $target)) {
-                            echo "failed to copy $source...\n";
+                            self::output_message("failed to copy $source...", $verbose);
                         }else {
                             $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
                             $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $file['size'];
@@ -262,12 +274,17 @@ class Functions {
                         $source = $file['dirname'].'/'.$file['basename'];
                         $target = $destination.'/'.$file['basename'];
                         
-                        echo ("Copying {$source} -> $target".PHP_EOL);
-                        if (!copy($source, $target)) {
-                            echo "failed to copy $source...\n";
-                        }else {
-                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
-                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $file['size'];
+                        self::output_message("Copying {$source} -> $target", $verbose);
+                        if (!file_exists($target) ) {
+                            if (!copy($source, $target)) {
+                                self::output_message("failed to copy $source...", $verbose);
+                            }else {
+                                $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                                $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $file['size'];
+                            }
+                        }else{
+                            self::output_message("[ ERROR ] >>> File {$source} already exist in $target", $verbose);
+                            array_push($stats['error'],"[ ERROR ] >>> File {$source} already exist in $target");
                         }
                     }
                 }
@@ -282,9 +299,9 @@ class Functions {
                         $source = $files[0]['dirname'].'/'.$files[0]['basename'];
                         $target = $destination.'/'.$new_file_name.'.'.$files[0]['extension'];
                         
-                        echo ("Copying {$source} -> $target".PHP_EOL);
+                        self::output_message("Copying {$source} -> $target", $verbose);
                         if (!copy($source, $target)) {
-                            echo "failed to copy $source...\n";
+                            self::output_message("failed to copy $source...", $verbose);
                         }else {
                             $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
                             $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
@@ -295,18 +312,29 @@ class Functions {
                         $source = $files[0]['dirname'].'/'.$files[0]['basename'];
                         $target = $destination.'/'.$files[0]['basename'];
                         
-                        echo ("Copying {$source} -> $target".PHP_EOL);
-                        if (!copy($source, $target)) {
-                            echo "failed to copy $source...\n";
-                        }else {
-                            $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
-                            $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
+                        self::output_message("Copying {$source} -> $target", $verbose);
+                        if (!file_exists($target) ) {
+                            if (!copy($source, $target)) {
+                                self::output_message("failed to copy $source...", $verbose);
+                            }else {
+                                $stats['total_copied_files']       = $stats['total_copied_files'] + 1;
+                                $stats['total_copied_file_sizes']  = $stats['total_copied_file_sizes'] + $files[0]['size'];
+                            }
+                        }else{
+                            self::output_message("[ ERROR ] >>> File {$source} already exist in $target", $verbose);
+                            array_push($stats['error'],"[ ERROR ] >>> File {$source} already exist in $target");
                         }
                     }
 	            }
 	        }
 	    }
 	    return $stats;
+	}
+	
+	private static function output_message($message, $verbose) {
+	    if($verbose){
+	        echo $message.PHP_EOL;
+	    }
 	}
 	
 	/**
