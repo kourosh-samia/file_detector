@@ -7,7 +7,7 @@ class Command{
 	private $_VERBOSE        = FALSE;                               // Puts the output on the screen
 	private $_DRYRUN         = FALSE;                               // Flag to run a dry run test
 	private $_RENAME         = FALSE;                               // Rename the files
-	private $_CONTENT_PATH   = '/home/idsmaster/Desktop/pictest/';  // The location to the files
+	private $_CONTENT_PATH   = '/home/idsmaster/Desktop/PICS/';  // The location to the files
 	private $_REPORT_PATH    = '/home/idsmaster/Desktop/pictest/';  // The location to the temp files 
 	private $_META_DATA      = 'meta_data.csv';                     // Meta Data filename
 	private $_NEW            = '';                                  // path and folder name for the new location to copy the files to
@@ -98,7 +98,8 @@ class Command{
 	    if(count($temp)==1){ // only key exist and not an argument - Look for warning message
 			die(Functions::getSysMsgSource($msg_source));
 		}else{
-		    if(trim($temp[1])==''){// if the argument is empty - Look for the error message
+		    if(trim($temp[1])==''){
+		        // if the argument is empty - Look for the error message
 				die(Functions::getSysMsgSource($msg_source, 'error'));	
 			}else{
 				switch ($msg_source) {
